@@ -3,12 +3,12 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/mdub/tagfush/app"
+	"github.com/mdub/dfresh/app"
 	"github.com/spf13/cobra"
 )
 
 var RootCmd = &cobra.Command{
-	Use:  "tagfush",
+	Use:  "dfresh",
 	Args: cobra.MaximumNArgs(1),
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		return app.DefaultContext.Init()

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/mdub/tagfush/cmd"
+	"github.com/mdub/dfresh/cmd"
 )
 
 func main() {
