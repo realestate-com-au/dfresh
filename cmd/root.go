@@ -1,32 +1,19 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/mdub/dfresh/app"
 	"github.com/spf13/cobra"
 )
 
-var RootCmd = &cobra.Command{
-	Use:  "dfresh",
-	Args: cobra.MaximumNArgs(1),
-	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-		return app.DefaultContext.Init()
-	},
-	RunE: func(cmd *cobra.Command, args []string) error {
+func NewRootCmd() *cobra.Command {
 
-		server := "https://index.docker.io/v1/"
-		if len(args) > 0 {
-			server = args[0]
-		}
+	root := &cobra.Command{
+		Use: "dfresh",
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			return app.DefaultContext.Init()
+		},
+	}
+	root.AddCommand(newCredsCmd())
+	return root
 
-		creds, err := app.DefaultContext.GetAuthFor(server)
-		if err != nil {
-			return err
-		}
-
-		fmt.Println("user:", creds.Username, "pass:", creds.Password, "auth:", creds.Auth)
-
-		return nil
-	},
 }
