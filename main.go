@@ -6,6 +6,7 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/docker/docker/cli/command"
+	cliflags "github.com/docker/docker/cli/flags"
 	"github.com/docker/docker/pkg/term"
 	"github.com/urfave/cli"
 )
@@ -24,7 +25,15 @@ func main() {
 				logrus.SetOutput(stderr)
 
 				cli := command.NewDockerCli(stdin, stdout, stderr)
-				fmt.Println(cli)
+				opts := cliflags.NewClientOptions()
+				cli.Initialize(opts)
+
+				creds, error := cli.CredentialsStore("").Get("https://index.docker.io/v1/")
+				if error != nil {
+					panic(error)
+				}
+				fmt.Println("user:", creds.Username, "pass:", creds.Password, "auth:", creds.Auth)
+
 				return nil
 			},
 		},
