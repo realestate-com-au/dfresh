@@ -10,18 +10,21 @@ import (
 var RootCmd = &cobra.Command{
 	Use:  "tagfush",
 	Args: cobra.MaximumNArgs(1),
+	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		return app.DefaultContext.Init()
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
-		context, err := app.NewContext()
-		if err != nil {
-			return err
-		}
 
 		server := "https://index.docker.io/v1/"
 		if len(args) > 0 {
 			server = args[0]
 		}
 
-		creds, err := context.GetAuthFor(server)
+		creds, err := app.DefaultContext.GetAuthFor(server)
+		if err != nil {
+			return err
+		}
+
 		fmt.Println("user:", creds.Username, "pass:", creds.Password, "auth:", creds.Auth)
 
 		return nil

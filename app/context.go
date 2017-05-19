@@ -12,18 +12,19 @@ type Context struct {
 	dockerCli *command.DockerCli
 }
 
-func NewContext() (*Context, error) {
+var DefaultContext = &Context{}
+
+func (context *Context) Init() error {
 	stdin, stdout, stderr := term.StdStreams()
 	logrus.SetOutput(stderr)
-
 	cli := command.NewDockerCli(stdin, stdout, stderr)
 	opts := cliflags.NewClientOptions()
 	err := cli.Initialize(opts)
 	if err != nil {
-		return nil, err
+		return err
 	}
-
-	return &Context{dockerCli: cli}, nil
+	context.dockerCli = cli
+	return nil
 }
 
 func (context *Context) GetAuthFor(server string) (types.AuthConfig, error) {
