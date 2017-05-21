@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/docker/distribution/reference"
+	"github.com/docker/docker/registry"
 	"github.com/spf13/cobra"
 )
 
@@ -18,8 +19,14 @@ func newTagsCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-
 			fmt.Println(ref)
+
+			// Resolve the Repository name from fqn to RepositoryInfo
+			repoInfo, err := registry.ParseRepositoryInfo(ref)
+			if err != nil {
+				return err
+			}
+			fmt.Println(repoInfo)
 
 			return nil
 		},
