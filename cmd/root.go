@@ -14,6 +14,7 @@ func NewRootCmd() *cobra.Command {
 		},
 	}
 	root.AddCommand(newCredsCmd())
+	root.AddCommand(newTagsCmd())
 	return root
 
 }
