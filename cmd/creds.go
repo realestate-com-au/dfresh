@@ -18,7 +18,7 @@ func newCredsCmd() *cobra.Command {
 				server = args[0]
 			}
 
-			creds, err := app.DefaultContext.GetAuthFor(server)
+			creds, err := app.GetAuthFor(server)
 			if err != nil {
 				return err
 			}

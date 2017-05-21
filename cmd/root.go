@@ -10,7 +10,7 @@ func NewRootCmd() *cobra.Command {
 	root := &cobra.Command{
 		Use: "dfresh",
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			return app.DefaultContext.Init()
+			return app.Init()
 		},
 	}
 	root.AddCommand(newCredsCmd())
