@@ -47,10 +47,6 @@ func GetTags(s string) ([]string, error) {
 	authConfig := command.ResolveAuthConfig(ctx, dockerCli, repoInfo.Index)
 
 	registryService := registry.NewService(registry.ServiceOptions{V2Only: true})
-	_, _, err = registryService.Auth(ctx, &authConfig, "dfresh")
-	if err != nil {
-		return tags, err
-	}
 
 	// get endpoints
 	endpoints, err := registryService.LookupPullEndpoints(reference.Domain(repoInfo.Name))
@@ -70,13 +66,10 @@ func GetTags(s string) ([]string, error) {
 			continue
 		}
 
-		repository, confirmedV2, lastError = distribution.NewV2Repository(ctx, repoInfo, endpoint, nil, authConfig, "pull")
+		repository, confirmedV2, lastError = distribution.NewV2Repository(ctx, repoInfo, endpoint, nil, &authConfig, "pull")
 		if lastError == nil && confirmedV2 {
 			break
 		}
-	}
-	if lastError != nil && confirmedV2 {
-		break
 	}
 	if lastError != nil {
 		return tags, lastError
