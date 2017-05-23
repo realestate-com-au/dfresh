@@ -2,14 +2,15 @@ package app
 
 import (
 	"github.com/Sirupsen/logrus"
+	dist "github.com/docker/distribution"
 	"github.com/docker/distribution/reference"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/cli/command"
 	cliflags "github.com/docker/docker/cli/flags"
+	"github.com/docker/docker/distribution"
 	"github.com/docker/docker/pkg/term"
-	"golang.org/x/net/context"
-
 	"github.com/docker/docker/registry"
+	"golang.org/x/net/context"
 )
 
 var dockerCli *command.DockerCli
@@ -45,11 +46,41 @@ func GetTags(s string) ([]string, error) {
 
 	authConfig := command.ResolveAuthConfig(ctx, dockerCli, repoInfo.Index)
 
-	service := registry.NewService(registry.ServiceOptions{V2Only: true})
-	_, _, err = service.Auth(ctx, &authConfig, "dfresh")
+	registryService := registry.NewService(registry.ServiceOptions{V2Only: true})
+	_, _, err = registryService.Auth(ctx, &authConfig, "dfresh")
 	if err != nil {
 		return tags, err
 	}
 
-	return []string{"hello"}, nil
+	// get endpoints
+	endpoints, err := registryService.LookupPullEndpoints(reference.Domain(repoInfo.Name))
+	if err != nil {
+		return tags, err
+	}
+
+	// retrieve repository
+	var (
+		confirmedV2 bool
+		repository  dist.Repository
+		lastError   error
+	)
+
+	for _, endpoint := range endpoints {
+		if endpoint.Version == registry.APIVersion1 {
+			continue
+		}
+
+		repository, confirmedV2, lastError = distribution.NewV2Repository(ctx, repoInfo, endpoint, nil, authConfig, "pull")
+		if lastError == nil && confirmedV2 {
+			break
+		}
+	}
+	if lastError != nil && confirmedV2 {
+		break
+	}
+	if lastError != nil {
+		return tags, lastError
+	}
+
+	return repository.Tags(ctx).All(ctx)
 }
