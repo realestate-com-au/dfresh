@@ -15,7 +15,7 @@ import (
 
 var dockerCli *command.DockerCli
 
-func Init() error {
+func Init(debug bool) error {
 	stdin, stdout, stderr := term.StdStreams()
 	logrus.SetOutput(stderr)
 	dockerCli = command.NewDockerCli(stdin, stdout, stderr)
@@ -23,6 +23,10 @@ func Init() error {
 	err := dockerCli.Initialize(opts)
 	if err != nil {
 		return err
+	}
+	if debug {
+		logrus.SetLevel(logrus.DebugLevel)
+		logrus.Debug("debug enabled")
 	}
 	return nil
 }
@@ -41,6 +45,10 @@ func GetTags(s string) ([]string, error) {
 	if err != nil {
 		return tags, err
 	}
+	logrus.WithFields(logrus.Fields{
+		"ref":  ref,
+		"repo": repoInfo,
+	}).Debug("repository found")
 
 	ctx := context.Background()
 
