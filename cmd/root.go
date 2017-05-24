@@ -18,8 +18,8 @@ func NewRootCmd() *cobra.Command {
 
 	root.PersistentFlags().BoolVarP(&debug, "debug", "d", false, "enable debugging")
 
-	root.AddCommand(newCredsCmd())
 	root.AddCommand(newTagsCmd())
+
 	return root
 
 }

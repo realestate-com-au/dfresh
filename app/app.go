@@ -4,7 +4,6 @@ import (
 	"github.com/Sirupsen/logrus"
 	dist "github.com/docker/distribution"
 	"github.com/docker/distribution/reference"
-	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/cli/command"
 	cliflags "github.com/docker/docker/cli/flags"
 	"github.com/docker/docker/distribution"
@@ -29,10 +28,6 @@ func Init(debug bool) error {
 		logrus.Debug("debug enabled")
 	}
 	return nil
-}
-
-func GetAuthFor(server string) (types.AuthConfig, error) {
-	return dockerCli.CredentialsStore("").Get(server)
 }
 
 func GetTags(s string) ([]string, error) {
