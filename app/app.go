@@ -73,6 +73,9 @@ func GetTags(s string) ([]string, error) {
 	if err != nil {
 		return tags, err
 	}
+	if _, ok := ref.(reference.Tagged); ok {
+		return tags, errors.New("reference already has a tag")
+	}
 	ctx := context.Background()
 	repository, err := newRepository(ctx, ref)
 	if err != nil {
