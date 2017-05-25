@@ -83,3 +83,21 @@ func GetTags(s string) ([]string, error) {
 	}
 	return repository.Tags(ctx).All(ctx)
 }
+
+func Resolve(s string) (dist.Descriptor, error) {
+	var descriptor dist.Descriptor
+	ref, err := reference.ParseNormalizedNamed(s)
+	if err != nil {
+		return descriptor, err
+	}
+	taggedRef, ok := ref.(reference.Tagged)
+	if !ok {
+		return descriptor, errors.New("reference has no tag")
+	}
+	ctx := context.Background()
+	repository, err := newRepository(ctx, ref)
+	if err != nil {
+		return descriptor, err
+	}
+	return repository.Tags(ctx).Get(ctx, taggedRef.Tag())
+}
