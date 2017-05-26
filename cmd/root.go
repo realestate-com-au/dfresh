@@ -32,6 +32,7 @@ func NewRootCmd() *cobra.Command {
 
 	root.AddCommand(newTagsCmd(client))
 	root.AddCommand(newResolveCmd(client))
+	root.AddCommand(newUpdateCmd(client))
 
 	return root
 
