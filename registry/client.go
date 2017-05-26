@@ -7,10 +7,10 @@ import (
 	"github.com/Sirupsen/logrus"
 	dist "github.com/docker/distribution"
 	"github.com/docker/distribution/reference"
-	"github.com/docker/docker/cli/command"
+	clicmd "github.com/docker/docker/cli/command"
 	cliflags "github.com/docker/docker/cli/flags"
-	"github.com/docker/docker/distribution"
-	"github.com/docker/docker/registry"
+	ddist "github.com/docker/docker/distribution"
+	dreg "github.com/docker/docker/registry"
 	"github.com/opencontainers/go-digest"
 	"golang.org/x/net/context"
 )
@@ -23,7 +23,7 @@ type Client interface {
 
 type defaultClient struct {
 	ctx       context.Context
-	dockerCli *command.DockerCli
+	dockerCli *clicmd.DockerCli
 }
 
 func NewClient() Client {
@@ -32,7 +32,7 @@ func NewClient() Client {
 
 // Initialise the app
 func (c *defaultClient) Init(debug bool) error {
-	c.dockerCli = command.NewDockerCli(os.Stdin, os.Stdout, os.Stderr)
+	c.dockerCli = clicmd.NewDockerCli(os.Stdin, os.Stdout, os.Stderr)
 	opts := cliflags.NewClientOptions()
 	opts.Common.Debug = debug
 	return c.dockerCli.Initialize(opts)
@@ -40,7 +40,7 @@ func (c *defaultClient) Init(debug bool) error {
 
 func (c *defaultClient) newRepository(ref reference.Named) (dist.Repository, error) {
 
-	repoInfo, err := registry.ParseRepositoryInfo(ref)
+	repoInfo, err := dreg.ParseRepositoryInfo(ref)
 	if err != nil {
 		return nil, err
 	}
@@ -50,18 +50,18 @@ func (c *defaultClient) newRepository(ref reference.Named) (dist.Repository, err
 		"repo": repoInfo,
 	}).Debug("repository found")
 
-	authConfig := command.ResolveAuthConfig(c.ctx, c.dockerCli, repoInfo.Index)
-	registryService := registry.NewService(registry.ServiceOptions{V2Only: true})
+	authConfig := clicmd.ResolveAuthConfig(c.ctx, c.dockerCli, repoInfo.Index)
+	registryService := dreg.NewService(dreg.ServiceOptions{V2Only: true})
 	endpoints, err := registryService.LookupPullEndpoints(reference.Domain(repoInfo.Name))
 	if err != nil {
 		return nil, err
 	}
 
 	for _, endpoint := range endpoints {
-		if endpoint.Version == registry.APIVersion1 {
+		if endpoint.Version == dreg.APIVersion1 {
 			continue
 		}
-		repository, confirmedV2, err := distribution.NewV2Repository(c.ctx, repoInfo, endpoint, nil, &authConfig, "pull")
+		repository, confirmedV2, err := ddist.NewV2Repository(c.ctx, repoInfo, endpoint, nil, &authConfig, "pull")
 		if err == nil && confirmedV2 {
 			return repository, nil
 		}
