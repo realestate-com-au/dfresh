@@ -1,25 +1,37 @@
 package cmd
 
 import (
-	"github.com/mdub/dfresh/app"
+	"os"
+
+	"github.com/Sirupsen/logrus"
+	rego "github.com/mdub/dfresh/registry"
 	"github.com/spf13/cobra"
 )
+
+func initLogging(debug bool) {
+	logrus.SetOutput(os.Stderr)
+	if debug {
+		logrus.SetLevel(logrus.DebugLevel)
+	}
+}
 
 func NewRootCmd() *cobra.Command {
 
 	var debug bool
+	client := rego.NewClient()
 
 	root := &cobra.Command{
 		Use: "dfresh",
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			return app.Init(debug)
+			initLogging(debug)
+			return client.Init(debug)
 		},
 	}
 
 	root.PersistentFlags().BoolVarP(&debug, "debug", "d", false, "enable debugging")
 
-	root.AddCommand(newTagsCmd())
-	root.AddCommand(newResolveCmd())
+	root.AddCommand(newTagsCmd(client))
+	root.AddCommand(newResolveCmd(client))
 
 	return root
 

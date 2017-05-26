@@ -1,7 +1,8 @@
-package app
+package registry
 
 import (
 	"errors"
+	"os"
 
 	"github.com/Sirupsen/logrus"
 	dist "github.com/docker/distribution"
@@ -9,38 +10,35 @@ import (
 	"github.com/docker/docker/cli/command"
 	cliflags "github.com/docker/docker/cli/flags"
 	"github.com/docker/docker/distribution"
-	"github.com/docker/docker/pkg/term"
 	"github.com/docker/docker/registry"
 	"github.com/opencontainers/go-digest"
 	"golang.org/x/net/context"
 )
 
-type RegistryClient struct {
-	dockerCli *command.DockerCli
-	ctx       context.Context
+type Client interface {
+	Init(debug bool) error
+	GetTags(s string) ([]string, error)
+	GetDigest(s string) (digest.Digest, error)
 }
 
-var registryClient *RegistryClient
+type defaultClient struct {
+	ctx       context.Context
+	dockerCli *command.DockerCli
+}
+
+func NewClient() Client {
+	return &defaultClient{ctx: context.Background()}
+}
 
 // Initialise the app
-func Init(debug bool) error {
-	stdin, stdout, stderr := term.StdStreams()
-	logrus.SetOutput(stderr)
-	dockerCli := command.NewDockerCli(stdin, stdout, stderr)
+func (c *defaultClient) Init(debug bool) error {
+	c.dockerCli = command.NewDockerCli(os.Stdin, os.Stdout, os.Stderr)
 	opts := cliflags.NewClientOptions()
-	err := dockerCli.Initialize(opts)
-	if err != nil {
-		return err
-	}
-	if debug {
-		logrus.SetLevel(logrus.DebugLevel)
-		logrus.Debug("debug enabled")
-	}
-	registryClient = &RegistryClient{dockerCli, context.Background()}
-	return nil
+	opts.Common.Debug = debug
+	return c.dockerCli.Initialize(opts)
 }
 
-func (registryClient *RegistryClient) newRepository(ref reference.Named) (dist.Repository, error) {
+func (c *defaultClient) newRepository(ref reference.Named) (dist.Repository, error) {
 
 	repoInfo, err := registry.ParseRepositoryInfo(ref)
 	if err != nil {
@@ -52,7 +50,7 @@ func (registryClient *RegistryClient) newRepository(ref reference.Named) (dist.R
 		"repo": repoInfo,
 	}).Debug("repository found")
 
-	authConfig := command.ResolveAuthConfig(registryClient.ctx, registryClient.dockerCli, repoInfo.Index)
+	authConfig := command.ResolveAuthConfig(c.ctx, c.dockerCli, repoInfo.Index)
 	registryService := registry.NewService(registry.ServiceOptions{V2Only: true})
 	endpoints, err := registryService.LookupPullEndpoints(reference.Domain(repoInfo.Name))
 	if err != nil {
@@ -63,7 +61,7 @@ func (registryClient *RegistryClient) newRepository(ref reference.Named) (dist.R
 		if endpoint.Version == registry.APIVersion1 {
 			continue
 		}
-		repository, confirmedV2, err := distribution.NewV2Repository(registryClient.ctx, repoInfo, endpoint, nil, &authConfig, "pull")
+		repository, confirmedV2, err := distribution.NewV2Repository(c.ctx, repoInfo, endpoint, nil, &authConfig, "pull")
 		if err == nil && confirmedV2 {
 			return repository, nil
 		}
@@ -73,11 +71,7 @@ func (registryClient *RegistryClient) newRepository(ref reference.Named) (dist.R
 
 }
 
-func GetTags(s string) ([]string, error) {
-	return registryClient.GetTags(s)
-}
-
-func (*RegistryClient) GetTags(s string) ([]string, error) {
+func (c *defaultClient) GetTags(s string) ([]string, error) {
 	var tags []string
 	ref, err := reference.ParseNormalizedNamed(s)
 	if err != nil {
@@ -86,19 +80,15 @@ func (*RegistryClient) GetTags(s string) ([]string, error) {
 	if _, ok := ref.(reference.Tagged); ok {
 		return tags, errors.New("reference already has a tag")
 	}
-	ctx := registryClient.ctx
-	repository, err := registryClient.newRepository(ref)
+	ctx := c.ctx
+	repository, err := c.newRepository(ref)
 	if err != nil {
 		return tags, err
 	}
 	return repository.Tags(ctx).All(ctx)
 }
 
-func GetDigest(s string) (digest.Digest, error) {
-	return registryClient.GetDigest(s)
-}
-
-func (*RegistryClient) GetDigest(s string) (digest.Digest, error) {
+func (c *defaultClient) GetDigest(s string) (digest.Digest, error) {
 	var nullDigest digest.Digest
 	ref, err := reference.ParseNormalizedNamed(s)
 	if err != nil {
@@ -113,11 +103,11 @@ func (*RegistryClient) GetDigest(s string) (digest.Digest, error) {
 	if ok {
 		tag = taggedRef.Tag()
 	}
-	repository, err := registryClient.newRepository(ref)
+	repository, err := c.newRepository(ref)
 	if err != nil {
 		return nullDigest, err
 	}
-	ctx := registryClient.ctx
+	ctx := c.ctx
 	descriptor, err := repository.Tags(ctx).Get(ctx, tag)
 	if err != nil {
 		return nullDigest, err

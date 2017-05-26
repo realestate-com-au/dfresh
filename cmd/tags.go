@@ -3,18 +3,17 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/mdub/dfresh/app"
-
+	rego "github.com/mdub/dfresh/registry"
 	"github.com/spf13/cobra"
 )
 
-func newTagsCmd() *cobra.Command {
+func newTagsCmd(client rego.Client) *cobra.Command {
 	return &cobra.Command{
 		Use:   "tags IMAGE",
 		Short: "Print all available tags for an image",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			tags, err := app.GetTags(args[0])
+			tags, err := client.GetTags(args[0])
 			if err != nil {
 				return err
 			}
