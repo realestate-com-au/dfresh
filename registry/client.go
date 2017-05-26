@@ -11,14 +11,13 @@ import (
 	cliflags "github.com/docker/docker/cli/flags"
 	ddist "github.com/docker/docker/distribution"
 	dreg "github.com/docker/docker/registry"
-	"github.com/opencontainers/go-digest"
 	"golang.org/x/net/context"
 )
 
 type Client interface {
 	Init(debug bool) error
 	GetTags(s string) ([]string, error)
-	GetDigest(s string) (digest.Digest, error)
+	Resolve(s string) (reference.Canonical, error)
 }
 
 type defaultClient struct {
@@ -88,16 +87,19 @@ func (c *defaultClient) GetTags(s string) ([]string, error) {
 	return repository.Tags(ctx).All(ctx)
 }
 
-func (c *defaultClient) GetDigest(s string) (digest.Digest, error) {
-	var nullDigest digest.Digest
+func (c *defaultClient) Resolve(s string) (reference.Canonical, error) {
 	ref, err := reference.ParseNormalizedNamed(s)
 	if err != nil {
-		return nullDigest, err
+		return nil, err
 	}
-	digestedRef, ok := ref.(reference.Digested)
+	canonicalRef, ok := ref.(reference.Canonical)
 	if ok {
-		return digestedRef.Digest(), nil
+		return canonicalRef, nil
 	}
+	// digestedRef, ok := ref.(reference.Digested)
+	// if ok {
+	// 	return reference.WithDigest(ref, digestedRef.Digest()), nil
+	// }
 	tag := "latest"
 	taggedRef, ok := ref.(reference.Tagged)
 	if ok {
@@ -105,12 +107,12 @@ func (c *defaultClient) GetDigest(s string) (digest.Digest, error) {
 	}
 	repository, err := c.newRepository(ref)
 	if err != nil {
-		return nullDigest, err
+		return nil, err
 	}
 	ctx := c.ctx
 	descriptor, err := repository.Tags(ctx).Get(ctx, tag)
 	if err != nil {
-		return nullDigest, err
+		return nil, err
 	}
-	return descriptor.Digest, nil
+	return reference.WithDigest(ref, descriptor.Digest)
 }
