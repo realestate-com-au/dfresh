@@ -11,6 +11,7 @@ import (
 	"github.com/docker/docker/distribution"
 	"github.com/docker/docker/pkg/term"
 	"github.com/docker/docker/registry"
+	"github.com/opencontainers/go-digest"
 	"golang.org/x/net/context"
 )
 
@@ -84,20 +85,29 @@ func GetTags(s string) ([]string, error) {
 	return repository.Tags(ctx).All(ctx)
 }
 
-func Resolve(s string) (dist.Descriptor, error) {
-	var descriptor dist.Descriptor
+func GetDigest(s string) (digest.Digest, error) {
+	var nullDigest digest.Digest
 	ref, err := reference.ParseNormalizedNamed(s)
 	if err != nil {
-		return descriptor, err
+		return nullDigest, err
 	}
+	digestedRef, ok := ref.(reference.Digested)
+	if ok {
+		return digestedRef.Digest(), nil
+	}
+	tag := "latest"
 	taggedRef, ok := ref.(reference.Tagged)
-	if !ok {
-		return descriptor, errors.New("reference has no tag")
+	if ok {
+		tag = taggedRef.Tag()
 	}
 	ctx := context.Background()
 	repository, err := newRepository(ctx, ref)
 	if err != nil {
-		return descriptor, err
+		return nullDigest, err
 	}
-	return repository.Tags(ctx).Get(ctx, taggedRef.Tag())
+	descriptor, err := repository.Tags(ctx).Get(ctx, tag)
+	if err != nil {
+		return nullDigest, err
+	}
+	return descriptor.Digest, nil
 }
