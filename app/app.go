@@ -15,13 +15,18 @@ import (
 	"golang.org/x/net/context"
 )
 
-var dockerCli *command.DockerCli
+type RegistryClient struct {
+	dockerCli *command.DockerCli
+	ctx       context.Context
+}
+
+var registryClient *RegistryClient
 
 // Initialise the app
 func Init(debug bool) error {
 	stdin, stdout, stderr := term.StdStreams()
 	logrus.SetOutput(stderr)
-	dockerCli = command.NewDockerCli(stdin, stdout, stderr)
+	dockerCli := command.NewDockerCli(stdin, stdout, stderr)
 	opts := cliflags.NewClientOptions()
 	err := dockerCli.Initialize(opts)
 	if err != nil {
@@ -31,10 +36,11 @@ func Init(debug bool) error {
 		logrus.SetLevel(logrus.DebugLevel)
 		logrus.Debug("debug enabled")
 	}
+	registryClient = &RegistryClient{dockerCli, context.Background()}
 	return nil
 }
 
-func newRepository(ctx context.Context, ref reference.Named) (dist.Repository, error) {
+func (registryClient *RegistryClient) newRepository(ref reference.Named) (dist.Repository, error) {
 
 	repoInfo, err := registry.ParseRepositoryInfo(ref)
 	if err != nil {
@@ -46,7 +52,7 @@ func newRepository(ctx context.Context, ref reference.Named) (dist.Repository, e
 		"repo": repoInfo,
 	}).Debug("repository found")
 
-	authConfig := command.ResolveAuthConfig(ctx, dockerCli, repoInfo.Index)
+	authConfig := command.ResolveAuthConfig(registryClient.ctx, registryClient.dockerCli, repoInfo.Index)
 	registryService := registry.NewService(registry.ServiceOptions{V2Only: true})
 	endpoints, err := registryService.LookupPullEndpoints(reference.Domain(repoInfo.Name))
 	if err != nil {
@@ -57,7 +63,7 @@ func newRepository(ctx context.Context, ref reference.Named) (dist.Repository, e
 		if endpoint.Version == registry.APIVersion1 {
 			continue
 		}
-		repository, confirmedV2, err := distribution.NewV2Repository(ctx, repoInfo, endpoint, nil, &authConfig, "pull")
+		repository, confirmedV2, err := distribution.NewV2Repository(registryClient.ctx, repoInfo, endpoint, nil, &authConfig, "pull")
 		if err == nil && confirmedV2 {
 			return repository, nil
 		}
@@ -67,8 +73,11 @@ func newRepository(ctx context.Context, ref reference.Named) (dist.Repository, e
 
 }
 
-// Get tags for a repository
 func GetTags(s string) ([]string, error) {
+	return registryClient.GetTags(s)
+}
+
+func (*RegistryClient) GetTags(s string) ([]string, error) {
 	var tags []string
 	ref, err := reference.ParseNormalizedNamed(s)
 	if err != nil {
@@ -77,8 +86,8 @@ func GetTags(s string) ([]string, error) {
 	if _, ok := ref.(reference.Tagged); ok {
 		return tags, errors.New("reference already has a tag")
 	}
-	ctx := context.Background()
-	repository, err := newRepository(ctx, ref)
+	ctx := registryClient.ctx
+	repository, err := registryClient.newRepository(ref)
 	if err != nil {
 		return tags, err
 	}
@@ -86,6 +95,10 @@ func GetTags(s string) ([]string, error) {
 }
 
 func GetDigest(s string) (digest.Digest, error) {
+	return registryClient.GetDigest(s)
+}
+
+func (*RegistryClient) GetDigest(s string) (digest.Digest, error) {
 	var nullDigest digest.Digest
 	ref, err := reference.ParseNormalizedNamed(s)
 	if err != nil {
@@ -100,11 +113,11 @@ func GetDigest(s string) (digest.Digest, error) {
 	if ok {
 		tag = taggedRef.Tag()
 	}
-	ctx := context.Background()
-	repository, err := newRepository(ctx, ref)
+	repository, err := registryClient.newRepository(ref)
 	if err != nil {
 		return nullDigest, err
 	}
+	ctx := registryClient.ctx
 	descriptor, err := repository.Tags(ctx).Get(ctx, tag)
 	if err != nil {
 		return nullDigest, err
