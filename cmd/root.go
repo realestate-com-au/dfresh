@@ -26,6 +26,7 @@ func NewRootCmd() *cobra.Command {
 			initLogging(debug)
 			return client.Init(debug)
 		},
+		SilenceUsage: true,
 	}
 
 	root.PersistentFlags().BoolVarP(&debug, "debug", "d", false, "enable debugging")
