@@ -80,6 +80,10 @@ func (c *defaultClient) GetTags(ref reference.Named) ([]string, error) {
 }
 
 func (c *defaultClient) Resolve(ref reference.Named) (reference.Canonical, error) {
+	canonicalRef, isCanonical := ref.(reference.Canonical)
+	if isCanonical {
+		return canonicalRef, nil
+	}
 	tag := "latest"
 	taggedRef, isTagged := ref.(reference.Tagged)
 	if isTagged {

@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/docker/distribution/reference"
@@ -18,10 +17,6 @@ func newResolveCmd(client rego.Client) *cobra.Command {
 			ref, err := reference.ParseNormalizedNamed(args[0])
 			if err != nil {
 				return err
-			}
-			_, isDigested := ref.(reference.Digested)
-			if isDigested {
-				return errors.New("reference already has a digest")
 			}
 			canonicalRef, err := client.Resolve(ref)
 			if err != nil {
