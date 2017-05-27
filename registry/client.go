@@ -79,12 +79,11 @@ func (c *defaultClient) GetTags(s string) ([]string, error) {
 	if _, ok := ref.(reference.Tagged); ok {
 		return tags, errors.New("reference already has a tag")
 	}
-	ctx := c.ctx
 	repository, err := c.newRepository(ref)
 	if err != nil {
 		return tags, err
 	}
-	return repository.Tags(ctx).All(ctx)
+	return repository.Tags(c.ctx).All(c.ctx)
 }
 
 func (c *defaultClient) Resolve(s string) (reference.Canonical, error) {
@@ -92,25 +91,20 @@ func (c *defaultClient) Resolve(s string) (reference.Canonical, error) {
 	if err != nil {
 		return nil, err
 	}
-	canonicalRef, ok := ref.(reference.Canonical)
-	if ok {
+	canonicalRef, isCanonical := ref.(reference.Canonical)
+	if isCanonical {
 		return canonicalRef, nil
 	}
-	// digestedRef, ok := ref.(reference.Digested)
-	// if ok {
-	// 	return reference.WithDigest(ref, digestedRef.Digest()), nil
-	// }
 	tag := "latest"
-	taggedRef, ok := ref.(reference.Tagged)
-	if ok {
+	taggedRef, isTagged := ref.(reference.Tagged)
+	if isTagged {
 		tag = taggedRef.Tag()
 	}
 	repository, err := c.newRepository(ref)
 	if err != nil {
 		return nil, err
 	}
-	ctx := c.ctx
-	descriptor, err := repository.Tags(ctx).Get(ctx, tag)
+	descriptor, err := repository.Tags(c.ctx).Get(c.ctx, tag)
 	if err != nil {
 		return nil, err
 	}
