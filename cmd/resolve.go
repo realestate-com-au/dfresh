@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/docker/distribution/reference"
@@ -14,7 +15,15 @@ func newResolveCmd(client rego.Client) *cobra.Command {
 		Short: "Resolve an image reference",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			canonicalRef, err := client.Resolve(args[0])
+			ref, err := reference.ParseNormalizedNamed(args[0])
+			if err != nil {
+				return err
+			}
+			_, isDigested := ref.(reference.Digested)
+			if isDigested {
+				return errors.New("reference already has a digest")
+			}
+			canonicalRef, err := client.Resolve(ref)
 			if err != nil {
 				return err
 			}

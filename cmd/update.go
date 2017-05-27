@@ -25,7 +25,11 @@ func newUpdateCmd(client rego.Client) *cobra.Command {
 			for scanner.Scan() {
 				var updateRef = func(s string) string {
 					parts := strings.Split(s, "@")
-					newRef, err := client.Resolve(parts[0])
+					ref, err := reference.ParseNormalizedNamed(s)
+					if err != nil {
+						panic(err)
+					}
+					newRef, err := client.Resolve(ref)
 					if err != nil {
 						logrus.Error(fmt.Sprintf("while resolving %s: %s", parts[0], err))
 						return s

@@ -16,8 +16,8 @@ import (
 
 type Client interface {
 	Init(debug bool) error
-	GetTags(s string) ([]string, error)
-	Resolve(s string) (reference.Canonical, error)
+	GetTags(ref reference.Named) ([]string, error)
+	Resolve(ref reference.Named) (reference.Canonical, error)
 }
 
 type defaultClient struct {
@@ -70,15 +70,8 @@ func (c *defaultClient) newRepository(ref reference.Named) (dist.Repository, err
 
 }
 
-func (c *defaultClient) GetTags(s string) ([]string, error) {
+func (c *defaultClient) GetTags(ref reference.Named) ([]string, error) {
 	var tags []string
-	ref, err := reference.ParseNormalizedNamed(s)
-	if err != nil {
-		return tags, err
-	}
-	if _, ok := ref.(reference.Tagged); ok {
-		return tags, errors.New("reference already has a tag")
-	}
 	repository, err := c.newRepository(ref)
 	if err != nil {
 		return tags, err
@@ -86,15 +79,7 @@ func (c *defaultClient) GetTags(s string) ([]string, error) {
 	return repository.Tags(c.ctx).All(c.ctx)
 }
 
-func (c *defaultClient) Resolve(s string) (reference.Canonical, error) {
-	ref, err := reference.ParseNormalizedNamed(s)
-	if err != nil {
-		return nil, err
-	}
-	canonicalRef, isCanonical := ref.(reference.Canonical)
-	if isCanonical {
-		return canonicalRef, nil
-	}
+func (c *defaultClient) Resolve(ref reference.Named) (reference.Canonical, error) {
 	tag := "latest"
 	taggedRef, isTagged := ref.(reference.Tagged)
 	if isTagged {

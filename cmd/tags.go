@@ -1,8 +1,10 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 
+	"github.com/docker/distribution/reference"
 	rego "github.com/mdub/dfresh/registry"
 	"github.com/spf13/cobra"
 )
@@ -13,7 +15,14 @@ func newTagsCmd(client rego.Client) *cobra.Command {
 		Short: "Print all available tags for an image",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			tags, err := client.GetTags(args[0])
+			ref, err := reference.ParseNormalizedNamed(args[0])
+			if err != nil {
+				return err
+			}
+			if _, ok := ref.(reference.Tagged); ok {
+				return errors.New("reference already has a tag")
+			}
+			tags, err := client.GetTags(ref)
 			if err != nil {
 				return err
 			}
