@@ -25,14 +25,25 @@ func newUpdateCmd(client rego.Client) *cobra.Command {
 			for scanner.Scan() {
 				var updateRef = func(s string) string {
 					parts := strings.Split(s, "@")
-					ref, err := reference.ParseNormalizedNamed(s)
+					nameAndTag := parts[0]
+					oldDigest := parts[1]
+					ref, err := reference.ParseNormalizedNamed(nameAndTag)
 					if err != nil {
 						panic(err)
 					}
 					newRef, err := client.Resolve(ref)
 					if err != nil {
-						logrus.Error(fmt.Sprintf("while resolving %s: %s", parts[0], err))
+						logrus.WithFields(logrus.Fields{
+							"reference": nameAndTag,
+						}).Error("cannot resolve")
 						return s
+					}
+					newDigest := newRef.Digest().String()
+					if newDigest != oldDigest {
+						logrus.WithFields(logrus.Fields{
+							"was": oldDigest,
+							"now": newDigest,
+						}).Info("updated " + nameAndTag)
 					}
 					return reference.FamiliarString(newRef)
 				}

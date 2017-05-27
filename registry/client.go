@@ -44,11 +44,6 @@ func (c *defaultClient) newRepository(ref reference.Named) (dist.Repository, err
 		return nil, err
 	}
 
-	logrus.WithFields(logrus.Fields{
-		"ref":  ref,
-		"repo": repoInfo,
-	}).Debug("repository found")
-
 	authConfig := clicmd.ResolveAuthConfig(c.ctx, c.dockerCli, repoInfo.Index)
 	registryService := dreg.NewService(dreg.ServiceOptions{V2Only: true})
 	endpoints, err := registryService.LookupPullEndpoints(reference.Domain(repoInfo.Name))
@@ -60,13 +55,19 @@ func (c *defaultClient) newRepository(ref reference.Named) (dist.Repository, err
 		if endpoint.Version == dreg.APIVersion1 {
 			continue
 		}
+		logrus.WithFields(logrus.Fields{
+			"endpoint": endpoint.URL,
+		}).Debug("contacting " + repoInfo.Index.Name)
 		repository, confirmedV2, err := ddist.NewV2Repository(c.ctx, repoInfo, endpoint, nil, &authConfig, "pull")
 		if err == nil && confirmedV2 {
 			return repository, nil
 		}
 	}
+	if err == nil {
+		err = errors.New("cannot reach " + repoInfo.Index.Name)
+	}
 
-	return nil, errors.New("no V2 endpoint found")
+	return nil, err
 
 }
 
