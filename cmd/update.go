@@ -43,7 +43,7 @@ func newUpdateCmd(client rego.Client) *cobra.Command {
 						logrus.WithFields(logrus.Fields{
 							"was": oldDigest,
 							"now": newDigest,
-						}).Info("updated " + nameAndTag)
+						}).Debug("updated " + nameAndTag)
 					}
 					return reference.FamiliarString(newRef)
 				}
