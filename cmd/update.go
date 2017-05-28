@@ -13,7 +13,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var refRegexp = regexp.MustCompile("\b" + reference.NameRegexp.String() + "(?::" + reference.TagRegexp.String() + ")?@" + reference.DigestRegexp.String() + "\b")
+var refRegexp = regexp.MustCompile(reference.NameRegexp.String() + "(?::" + reference.TagRegexp.String() + ")?@" + reference.DigestRegexp.String() + "\\b")
 
 func newUpdateCmd(client rego.Client) *cobra.Command {
 	return &cobra.Command{
