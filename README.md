@@ -31,8 +31,25 @@ ruby:2.3@sha256:08868d719684cf9cafacbaa1786ad01111332b4c1e65abd67833db603d8dab7f
 
 ## Update references
 
-`update` finds fully-specified references in input (those with
-a digest), and updates the digest.
+```
+dfresh update [flags] [FILE...]
+```
+
+`update` searches the named input FILEs for fully-specified references and updates their digest.  If no files are specified, `update` updates standard input and writes the updated content to standard output.
+
+### EXAMPLES
+
+Update references in a file:
+
+```
+$ cat Dockerfile
+FROM ruby:2.3@sha256:a5ebd3bc0bf3881258975f8afa1c6d24429dfd4d7dd53a299559a3e927b77fd7
+$ dfresh update Dockerfile
+$ cat Dockerfile
+FROM ruby:2.3@sha256:08868d719684cf9cafacbaa1786ad01111332b4c1e65abd67833db603d8dab7f
+```
+
+Update references in a pipeline:
 
 ```
 $ echo "FROM ruby:2.3@sha256:a5ebd3bc0bf3881258975f8afa1c6d24429dfd4d7dd53a299559a3e927b77fd7" |

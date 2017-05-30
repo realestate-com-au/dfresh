@@ -2,8 +2,10 @@ package cmd
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"regexp"
 	"strings"
@@ -18,13 +20,43 @@ var refRegexp = regexp.MustCompile(reference.NameRegexp.String() + "(?::" + refe
 
 func newUpdateCmd(client rego.Client) *cobra.Command {
 	return &cobra.Command{
-		Use:   "update",
+		Use:   "update [flags] [FILE...]",
 		Short: "Update image references",
-		Args:  cobra.ExactArgs(0),
+		Args:  cobra.MinimumNArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return updateRefsInStream(client, os.Stdin, os.Stdout)
+			if len(args) == 0 {
+				return updateRefsInStream(client, os.Stdin, os.Stdout)
+			} else {
+				return updateRefsInFiles(client, args)
+			}
 		},
 	}
+}
+
+func updateRefsInFiles(client rego.Client, paths []string) error {
+	for _, path := range paths {
+		err := updateRefsInFile(client, path)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func updateRefsInFile(client rego.Client, path string) error {
+	buffer := new(bytes.Buffer)
+	input, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+
+	err = updateRefsInStream(client, input, buffer)
+	if err != nil {
+		return err
+	}
+	input.Close()
+
+	return ioutil.WriteFile(path, buffer.Bytes(), 0666)
 }
 
 func updateRefsInStream(client rego.Client, input io.Reader, output io.Writer) (err error) {
