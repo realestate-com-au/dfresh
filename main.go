@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/mdub/dfresh/cmd"
+	"github.com/realestate-com-au/dfresh/cmd"
 )
 
 func main() {

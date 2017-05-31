@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/docker/distribution/reference"
-	rego "github.com/mdub/dfresh/registry"
+	rego "github.com/realestate-com-au/dfresh/registry"
 	"github.com/spf13/cobra"
 )
 
