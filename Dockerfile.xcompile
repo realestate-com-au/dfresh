@@ -4,6 +4,6 @@ RUN go get github.com/mitchellh/gox
 
 ENV CGO_ENABLED=0
 
-COPY . /go/src/github.com/mdub/dfresh
-WORKDIR /go/src/github.com/mdub/dfresh
+COPY . /go/src/github.com/realestate-com-au/dfresh
+WORKDIR /go/src/github.com/realestate-com-au/dfresh
 RUN gox -osarch "linux/amd64 darwin/amd64"
