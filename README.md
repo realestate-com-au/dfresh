@@ -56,3 +56,14 @@ $ echo "FROM ruby:2.3@sha256:a5ebd3bc0bf3881258975f8afa1c6d24429dfd4d7dd53a29955
   dfresh update
 FROM ruby:2.3@sha256:08868d719684cf9cafacbaa1786ad01111332b4c1e65abd67833db603d8dab7f
 ```
+
+### Docker image
+
+dfresh is released as a docker image as well, and can be run with:
+
+```
+docker run --rm \
+  -v ${PWD}:/cwd
+  mdub/dfresh \
+  <COMMAND>
+```
