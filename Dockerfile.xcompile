@@ -1,0 +1,9 @@
+FROM golang:1.7@sha256:9bd56cd1d298b30e79e6f6ea14405c98b6cfb6553e05d2cd8ac02ecfc544dee0
+
+RUN go get github.com/mitchellh/gox
+
+ENV CGO_ENABLED=0
+
+COPY . /go/src/github.com/mdub/dfresh
+WORKDIR /go/src/github.com/mdub/dfresh
+RUN gox -osarch "linux/amd64 darwin/amd64"
