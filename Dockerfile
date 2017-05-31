@@ -9,4 +9,6 @@ RUN apk add --update \
 
 ADD dfresh /
 
+WORKDIR /cwd
+
 ENTRYPOINT ["/dfresh"]
