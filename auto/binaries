@@ -7,11 +7,3 @@ xcompile_image=$(docker build -f Dockerfile.xcompile -q .)
 
 mkdir -p target
 docker run --rm $xcompile_image sh -c 'tar cf - dfresh_*' | (cd target && tar xvf -)
-
-docker run --rm \
-  -e GOOS=linux \
-  -e CGO_ENABLED=0 \
-  -v "${PWD}":/go/src/github.com/mdub/dfresh \
-  -w /go/src/github.com/mdub/dfresh \
-  golang:1.8.3-alpine \
-  go build -ldflags "-s" -a -installsuffix cgo -o target/dfresh_alpine
