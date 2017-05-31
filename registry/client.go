@@ -7,11 +7,11 @@ import (
 	"github.com/Sirupsen/logrus"
 	dist "github.com/docker/distribution"
 	"github.com/docker/distribution/reference"
+	"github.com/docker/docker/api/types"
 	clicmd "github.com/docker/docker/cli/command"
 	cliflags "github.com/docker/docker/cli/flags"
 	ddist "github.com/docker/docker/distribution"
 	dreg "github.com/docker/docker/registry"
-	"github.com/docker/docker/api/types"
 	"golang.org/x/net/context"
 )
 
