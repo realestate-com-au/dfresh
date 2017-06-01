@@ -37,7 +37,7 @@ dfresh update [flags] [FILE...]
 
 `update` searches the named input FILEs for fully-specified references and updates their digest.  If no files are specified, `update` updates standard input and writes the updated content to standard output.
 
-### EXAMPLES
+### Examples
 
 Update references in a file:
 
