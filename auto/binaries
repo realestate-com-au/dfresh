@@ -7,5 +7,3 @@ xcompile_image=$(docker build -f Dockerfile.xcompile -q .)
 
 mkdir -p target
 docker run --rm $xcompile_image sh -c 'tar cf - dfresh_*' | (cd target && tar xvf -)
-
-docker build -t realestate/dfresh:latest .

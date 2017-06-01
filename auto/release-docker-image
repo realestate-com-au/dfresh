@@ -1,14 +1,29 @@
-#!/bin/bash -e
+#!/bin/bash -eu
+#
+# Release dfresh
+
+REPOSITORY=realestate/dfresh
 
 cd $(dirname $0)/..
 
-REPOSITORY=realestate/dfresh
-VERSION="0.0.1"
+echo "--- Check that we're releasing from master"
+git fetch origin
+git diff origin/master --exit-code
 
-# Build the image
-auto/package
+echo "--- Building the binaries"
+auto/binaries
 
-# Release the image
-docker push ${REPOSITORY}:latest
+echo "--- Build Docker image"
+docker build -t ${REPOSITORY}:latest .
+
+echo "--- Get the version number"
+VERSION=$(docker run --rm ${REPOSITORY}:latest version)
+
+echo "--- Tagging Git repo (version: ${VERSION})"
+git tag v${VERSION}
+git push origin v${VERSION}
+
+echo "--- Releasing Docker image"
 docker tag ${REPOSITORY}:latest ${REPOSITORY}:${VERSION}
+docker push ${REPOSITORY}:${VERSION}
 docker push ${REPOSITORY}:latest

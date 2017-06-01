@@ -1,9 +1,0 @@
-#!/bin/bash -e
-
-cd $(dirname $0)/..
-
-# Ensure we have no local changes
-git diff HEAD --exit-code
-
-auto/release-binaries
-auto/release-docker-image
