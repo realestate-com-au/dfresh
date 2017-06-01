@@ -2,6 +2,3 @@
 .gitignore
 Dockerfile*
 auto
-dfresh
-dfresh_*
-target

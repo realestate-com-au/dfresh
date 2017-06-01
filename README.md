@@ -1,4 +1,4 @@
-# dfresh
+# dfresh [![Build Status](https://travis-ci.org/realestate-com-au/dfresh.svg?branch=master)](https://travis-ci.org/realestate-com-au/dfresh)
 
 `dfresh` is a Docker registry client.
 
