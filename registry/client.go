@@ -7,6 +7,7 @@ import (
 	"github.com/Sirupsen/logrus"
 	dist "github.com/docker/distribution"
 	"github.com/docker/distribution/reference"
+	"github.com/docker/docker/api/types"
 	clicmd "github.com/docker/docker/cli/command"
 	cliflags "github.com/docker/docker/cli/flags"
 	ddist "github.com/docker/docker/distribution"
@@ -37,6 +38,19 @@ func (c *defaultClient) Init(debug bool) error {
 	return c.dockerCli.Initialize(opts)
 }
 
+// This is mostly copied from the docker code base, and we deliberately don't
+// ask the daemon for the default index server, since we don't want to rely on
+// one running.
+func (c *defaultClient) resolveAuthConfig(repoInfo *dreg.RepositoryInfo) types.AuthConfig {
+	configKey := repoInfo.Index.Name
+	if repoInfo.Index.Official {
+		configKey = dreg.IndexServer
+	}
+
+	authConfig, _ := c.dockerCli.CredentialsStore(configKey).Get(configKey)
+	return authConfig
+}
+
 func (c *defaultClient) newRepository(ref reference.Named) (dist.Repository, error) {
 
 	repoInfo, err := dreg.ParseRepositoryInfo(ref)
@@ -44,7 +58,8 @@ func (c *defaultClient) newRepository(ref reference.Named) (dist.Repository, err
 		return nil, err
 	}
 
-	authConfig := clicmd.ResolveAuthConfig(c.ctx, c.dockerCli, repoInfo.Index)
+	authConfig := c.resolveAuthConfig(repoInfo)
+
 	registryService := dreg.NewService(dreg.ServiceOptions{V2Only: true})
 	endpoints, err := registryService.LookupPullEndpoints(reference.Domain(repoInfo.Name))
 	if err != nil {
