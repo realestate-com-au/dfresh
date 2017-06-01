@@ -23,7 +23,16 @@ echo "--- Tagging Git repo (version: ${VERSION})"
 git tag v${VERSION}
 git push origin v${VERSION}
 
+semantic_versions() {
+  case $1 in
+    *.*) printf %s "$1 $(semantic_versions ${1%\.*})" ;;
+    *) printf %s "$1"
+  esac
+}
+
 echo "--- Releasing Docker image"
-docker tag ${REPOSITORY}:latest ${REPOSITORY}:${VERSION}
-docker push ${REPOSITORY}:${VERSION}
 docker push ${REPOSITORY}:latest
+for version in $(semantic_versions $VERSION); do
+  docker tag ${REPOSITORY}:latest ${REPOSITORY}:${version}
+  docker push ${REPOSITORY}:${version}
+done
