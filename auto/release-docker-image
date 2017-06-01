@@ -1,0 +1,14 @@
+#!/bin/bash -e
+
+cd $(dirname $0)/..
+
+REPOSITORY=cowbell/dfresh
+VERSION="0.0.1"
+
+# Build the image
+auto/package
+
+# Release the image
+docker push ${REPOSITORY}:latest
+docker tag ${REPOSITORY}:latest ${REPOSITORY}:${VERSION}
+docker push ${REPOSITORY}:latest
