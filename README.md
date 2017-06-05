@@ -2,6 +2,12 @@
 
 `dfresh` is a Docker registry client.
 
+## Usage
+
+    alias dfresh="docker run -ti --rm realestate/dfresh"
+
+    dfresh help
+
 ## Get Docker repository tags
 
 Use the `tags` subcommand to list available tags for a repository.
