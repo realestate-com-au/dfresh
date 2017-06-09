@@ -35,6 +35,8 @@ func (c *defaultClient) Init(debug bool) error {
 	c.dockerCli = clicmd.NewDockerCli(os.Stdin, os.Stdout, os.Stderr)
 	opts := cliflags.NewClientOptions()
 	opts.Common.Debug = debug
+  // feeling awkward about overriding this global variable here. The default is not appropriate for a cli tool.
+  dreg.CertsDir = ""
 	return c.dockerCli.Initialize(opts)
 }
 
