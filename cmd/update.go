@@ -27,7 +27,7 @@ func newUpdateCmd(client rego.Client) *cobra.Command {
 			if len(args) == 0 {
 				return checker.CheckStream("-", os.Stdin, os.Stdout)
 			}
-			return checker.CheckFiles(args)
+			return checker.CheckFiles(args, true)
 		},
 	}
 	command.Flags().BoolVarP(&quiet, "quiet", "q", false, "be silent")

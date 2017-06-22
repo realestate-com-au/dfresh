@@ -28,9 +28,9 @@ func NewChecker(client rego.Client, reportWriter io.Writer) *Checker {
 
 var refRegexp = regexp.MustCompile(reference.NameRegexp.String() + "(?::" + reference.TagRegexp.String() + ")?@" + reference.DigestRegexp.String() + "\\b")
 
-func (c *Checker) CheckFiles(paths []string) error {
+func (c *Checker) CheckFiles(paths []string, saveUpdates bool) error {
 	for _, path := range paths {
-		err := c.CheckFile(path)
+		err := c.CheckFile(path, saveUpdates)
 		if err != nil {
 			return err
 		}
@@ -38,7 +38,7 @@ func (c *Checker) CheckFiles(paths []string) error {
 	return nil
 }
 
-func (c *Checker) CheckFile(path string) error {
+func (c *Checker) CheckFile(path string, saveUpdates bool) error {
 	buffer := new(bytes.Buffer)
 	input, err := os.Open(path)
 	if err != nil {
@@ -51,7 +51,10 @@ func (c *Checker) CheckFile(path string) error {
 	}
 	input.Close()
 
-	return ioutil.WriteFile(path, buffer.Bytes(), 0666)
+	if saveUpdates {
+		return ioutil.WriteFile(path, buffer.Bytes(), 0666)
+	}
+	return nil
 }
 
 func (c *Checker) UpdateCount() int {
