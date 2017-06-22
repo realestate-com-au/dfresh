@@ -9,6 +9,6 @@ import (
 func main() {
 	dreg.CertsDir = ""
 	if err := cmd.NewRootCmd().Execute(); err != nil {
-		os.Exit(1)
+		os.Exit(10)
 	}
 }
