@@ -1,4 +1,4 @@
-package cmd
+package update
 
 import (
 	"bytes"
@@ -29,7 +29,7 @@ func TestUpdateRefsInStream(t *testing.T) {
 	inputReader := strings.NewReader("ruby:2.3@sha256:a5ebd3bc0bf3881258975f8afa1c6d24429dfd4d7dd53a299559a3e927b77fd7")
 	outputWriter := new(bytes.Buffer)
 
-	err := updateRefsInStream(client, inputReader, outputWriter)
+	err := UpdateRefsInStream(client, inputReader, outputWriter)
 
 	if err != nil {
 		t.Error("Did not expect error, ", err)
