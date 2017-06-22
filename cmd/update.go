@@ -20,9 +20,8 @@ func newUpdateCmd(client rego.Client) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 {
 				return update.UpdateRefsInStream(client, os.Stdin, os.Stdout)
-			} else {
-				return update.UpdateRefsInFiles(client, args)
 			}
+			return update.UpdateRefsInFiles(client, args)
 		},
 	}
 }
