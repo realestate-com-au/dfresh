@@ -18,10 +18,11 @@ func newUpdateCmd(client rego.Client) *cobra.Command {
 		Short: "Update image references",
 		Args:  cobra.MinimumNArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			updater := update.NewUpdater(client)
 			if len(args) == 0 {
-				return update.UpdateRefsInStream(client, os.Stdin, os.Stdout)
+				return updater.UpdateRefsInStream(os.Stdin, os.Stdout)
 			}
-			return update.UpdateRefsInFiles(client, args)
+			return updater.UpdateRefsInFiles(args)
 		},
 	}
 }

@@ -15,11 +15,19 @@ import (
 	rego "github.com/realestate-com-au/dfresh/registry"
 )
 
+type Updater struct {
+	client rego.Client
+}
+
+func NewUpdater(client rego.Client) *Updater {
+	return &Updater{client: client}
+}
+
 var refRegexp = regexp.MustCompile(reference.NameRegexp.String() + "(?::" + reference.TagRegexp.String() + ")?@" + reference.DigestRegexp.String() + "\\b")
 
-func UpdateRefsInFiles(client rego.Client, paths []string) error {
+func (u *Updater) UpdateRefsInFiles(paths []string) error {
 	for _, path := range paths {
-		err := UpdateRefsInFile(client, path)
+		err := u.UpdateRefsInFile(path)
 		if err != nil {
 			return err
 		}
@@ -27,14 +35,14 @@ func UpdateRefsInFiles(client rego.Client, paths []string) error {
 	return nil
 }
 
-func UpdateRefsInFile(client rego.Client, path string) error {
+func (u *Updater) UpdateRefsInFile(path string) error {
 	buffer := new(bytes.Buffer)
 	input, err := os.Open(path)
 	if err != nil {
 		return err
 	}
 
-	err = UpdateRefsInStream(client, input, buffer)
+	err = u.UpdateRefsInStream(input, buffer)
 	if err != nil {
 		return err
 	}
@@ -43,18 +51,18 @@ func UpdateRefsInFile(client rego.Client, path string) error {
 	return ioutil.WriteFile(path, buffer.Bytes(), 0666)
 }
 
-func UpdateRefsInStream(client rego.Client, input io.Reader, output io.Writer) (err error) {
+func (u *Updater) UpdateRefsInStream(input io.Reader, output io.Writer) (err error) {
 	scanner := bufio.NewScanner(input)
 	for scanner.Scan() {
 		updated := refRegexp.ReplaceAllStringFunc(scanner.Text(), func(s string) string {
-			return getUpdatedRef(client, s)
+			return u.getUpdatedRef(s)
 		})
 		fmt.Fprintln(output, updated)
 	}
 	return scanner.Err()
 }
 
-func getUpdatedRef(client rego.Client, s string) string {
+func (u *Updater) getUpdatedRef(s string) string {
 	parts := strings.Split(s, "@")
 	nameAndTag := parts[0]
 	oldDigest := parts[1]
@@ -62,7 +70,7 @@ func getUpdatedRef(client rego.Client, s string) string {
 	if err != nil {
 		panic(err)
 	}
-	newRef, err := client.Resolve(ref)
+	newRef, err := u.client.Resolve(ref)
 	if err != nil {
 		logrus.WithFields(logrus.Fields{
 			"reference": nameAndTag,
