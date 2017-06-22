@@ -32,6 +32,7 @@ func TestUpdateRefsInStream(t *testing.T) {
 	input := "line1\nruby:2.3@" + oldDigest + "\nline 3\n"
 	expectedOutput := strings.Replace(input, oldDigest, newDigest, 1)
 	expectedReport := "-:2: ruby:2.3\n  was " + oldDigest + "\n  now " + newDigest + "\n"
+	expectedUpdates := 1
 
 	client := &stubClient{digest: digest.Digest(newDigest)}
 	inputReader := strings.NewReader(input)
@@ -52,6 +53,11 @@ func TestUpdateRefsInStream(t *testing.T) {
 	report := reportWriter.String()
 	if report != expectedReport {
 		t.Errorf("expected report %q, got %q", expectedReport, report)
+	}
+
+	updateCount := u.UpdateCount()
+	if updateCount != expectedUpdates {
+		t.Errorf("expected %q updates, got %q", expectedUpdates, updateCount)
 	}
 
 }

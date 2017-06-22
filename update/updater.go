@@ -19,6 +19,7 @@ import (
 type Updater struct {
 	client       rego.Client
 	reportWriter io.Writer
+	updateCount  int
 }
 
 func NewUpdater(client rego.Client, reportWriter io.Writer) *Updater {
@@ -51,6 +52,10 @@ func (u *Updater) UpdateRefsInFile(path string) error {
 	input.Close()
 
 	return ioutil.WriteFile(path, buffer.Bytes(), 0666)
+}
+
+func (u *Updater) UpdateCount() int {
+	return u.updateCount
 }
 
 func (u *Updater) UpdateRefsInStream(streamName string, input io.Reader, output io.Writer) (err error) {
@@ -91,5 +96,6 @@ func (u *Updater) updateRef(s string, context string) string {
 		return s
 	}
 	fmt.Fprintf(u.reportWriter, "%s: %s\n  was %s\n  now %s\n", context, nameAndTag, oldDigest, newDigest)
+	u.updateCount++
 	return reference.FamiliarString(newRef)
 }
