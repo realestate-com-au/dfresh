@@ -1,8 +1,8 @@
 package cmd
 
 import (
-	"bytes"
 	"io"
+	"io/ioutil"
 	"os"
 	"regexp"
 
@@ -25,7 +25,7 @@ func newUpdateCmd(client rego.Client) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			reportDestination := io.Writer(os.Stdout)
 			if quiet || len(args) == 0 {
-				reportDestination = new(bytes.Buffer)
+				reportDestination = ioutil.Discard
 			}
 			updater := update.NewUpdater(client, reportDestination)
 			if len(args) == 0 {
