@@ -1,4 +1,4 @@
-package update
+package check
 
 import (
 	"bufio"
@@ -16,21 +16,21 @@ import (
 	rego "github.com/realestate-com-au/dfresh/registry"
 )
 
-type Updater struct {
+type Checker struct {
 	client       rego.Client
 	reportWriter io.Writer
 	updateCount  int
 }
 
-func NewUpdater(client rego.Client, reportWriter io.Writer) *Updater {
-	return &Updater{client: client, reportWriter: reportWriter}
+func NewChecker(client rego.Client, reportWriter io.Writer) *Checker {
+	return &Checker{client: client, reportWriter: reportWriter}
 }
 
 var refRegexp = regexp.MustCompile(reference.NameRegexp.String() + "(?::" + reference.TagRegexp.String() + ")?@" + reference.DigestRegexp.String() + "\\b")
 
-func (u *Updater) UpdateRefsInFiles(paths []string) error {
+func (c *Checker) CheckFiles(paths []string) error {
 	for _, path := range paths {
-		err := u.UpdateRefsInFile(path)
+		err := c.CheckFile(path)
 		if err != nil {
 			return err
 		}
@@ -38,14 +38,14 @@ func (u *Updater) UpdateRefsInFiles(paths []string) error {
 	return nil
 }
 
-func (u *Updater) UpdateRefsInFile(path string) error {
+func (c *Checker) CheckFile(path string) error {
 	buffer := new(bytes.Buffer)
 	input, err := os.Open(path)
 	if err != nil {
 		return err
 	}
 
-	err = u.UpdateRefsInStream(path, input, buffer)
+	err = c.CheckStream(path, input, buffer)
 	if err != nil {
 		return err
 	}
@@ -54,25 +54,25 @@ func (u *Updater) UpdateRefsInFile(path string) error {
 	return ioutil.WriteFile(path, buffer.Bytes(), 0666)
 }
 
-func (u *Updater) UpdateCount() int {
-	return u.updateCount
+func (c *Checker) UpdateCount() int {
+	return c.updateCount
 }
 
-func (u *Updater) UpdateRefsInStream(streamName string, input io.Reader, output io.Writer) (err error) {
+func (c *Checker) CheckStream(streamName string, input io.Reader, output io.Writer) (err error) {
 	scanner := bufio.NewScanner(input)
 	line := 0
 	for scanner.Scan() {
 		line++
 		context := streamName + ":" + strconv.Itoa(line)
 		updated := refRegexp.ReplaceAllStringFunc(scanner.Text(), func(s string) string {
-			return u.updateRef(s, context)
+			return c.updateRef(s, context)
 		})
 		fmt.Fprintln(output, updated)
 	}
 	return scanner.Err()
 }
 
-func (u *Updater) updateRef(s string, context string) string {
+func (c *Checker) updateRef(s string, context string) string {
 	parts := strings.Split(s, "@")
 	nameAndTag := parts[0]
 	oldDigest := parts[1]
@@ -84,7 +84,7 @@ func (u *Updater) updateRef(s string, context string) string {
 	if err != nil {
 		panic(err)
 	}
-	newRef, err := u.client.Resolve(ref)
+	newRef, err := c.client.Resolve(ref)
 	if err != nil {
 		logrus.WithFields(logrus.Fields{
 			"reference": nameAndTag,
@@ -95,7 +95,7 @@ func (u *Updater) updateRef(s string, context string) string {
 	if newDigest == oldDigest {
 		return s
 	}
-	fmt.Fprintf(u.reportWriter, "%s: %s\n  was %s\n  now %s\n", context, nameAndTag, oldDigest, newDigest)
-	u.updateCount++
+	fmt.Fprintf(c.reportWriter, "%s: %s\n  was %s\n  now %s\n", context, nameAndTag, oldDigest, newDigest)
+	c.updateCount++
 	return reference.FamiliarString(newRef)
 }

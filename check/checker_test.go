@@ -1,4 +1,4 @@
-package update
+package check
 
 import (
 	"bytes"
@@ -25,7 +25,7 @@ func (c *stubClient) Resolve(name reference.Named) (reference.Canonical, error) 
 	return reference.WithDigest(name, c.digest)
 }
 
-func TestUpdateRefsInStream(t *testing.T) {
+func TestCheckStream(t *testing.T) {
 
 	oldDigest := "sha256:a5ebd3bc0bf3881258975f8afa1c6d24429dfd4d7dd53a299559a3e927b77fd7"
 	newDigest := "sha256:08868d719684cf9cafacbaa1786ad01111332b4c1e65abd67833db603d8dab7f"
@@ -38,9 +38,9 @@ func TestUpdateRefsInStream(t *testing.T) {
 	inputReader := strings.NewReader(input)
 	outputWriter := new(bytes.Buffer)
 	reportWriter := new(bytes.Buffer)
-	u := NewUpdater(client, reportWriter)
+	c := NewChecker(client, reportWriter)
 
-	err := u.UpdateRefsInStream("-", inputReader, outputWriter)
+	err := c.CheckStream("-", inputReader, outputWriter)
 	if err != nil {
 		t.Error("Did not expect error, ", err)
 	}
@@ -55,7 +55,7 @@ func TestUpdateRefsInStream(t *testing.T) {
 		t.Errorf("expected report %q, got %q", expectedReport, report)
 	}
 
-	updateCount := u.UpdateCount()
+	updateCount := c.UpdateCount()
 	if updateCount != expectedUpdates {
 		t.Errorf("expected %q updates, got %q", expectedUpdates, updateCount)
 	}

@@ -5,8 +5,8 @@ import (
 	"io/ioutil"
 	"os"
 
+	"github.com/realestate-com-au/dfresh/check"
 	rego "github.com/realestate-com-au/dfresh/registry"
-	"github.com/realestate-com-au/dfresh/update"
 	"github.com/spf13/cobra"
 )
 
@@ -23,11 +23,11 @@ func newUpdateCmd(client rego.Client) *cobra.Command {
 			if quiet || len(args) == 0 {
 				reportDestination = ioutil.Discard
 			}
-			updater := update.NewUpdater(client, reportDestination)
+			checker := check.NewChecker(client, reportDestination)
 			if len(args) == 0 {
-				return updater.UpdateRefsInStream("-", os.Stdin, os.Stdout)
+				return checker.CheckStream("-", os.Stdin, os.Stdout)
 			}
-			return updater.UpdateRefsInFiles(args)
+			return checker.CheckFiles(args)
 		},
 	}
 	command.Flags().BoolVarP(&quiet, "quiet", "q", false, "be silent")
