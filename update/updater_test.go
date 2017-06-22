@@ -46,18 +46,12 @@ func TestUpdateRefsInStream(t *testing.T) {
 
 	output := outputWriter.String()
 	if output != expectedOutput {
-		t.Error(
-			"expected", expectedOutput,
-			"got", output,
-		)
+		t.Errorf("expected output %q, got %q", expectedOutput, output)
 	}
 
 	report := reportWriter.String()
 	if report != expectedReport {
-		t.Error(
-			"expected", expectedReport,
-			"got", report,
-		)
+		t.Errorf("expected report %q, got %q", expectedReport, report)
 	}
 
 }
