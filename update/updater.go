@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/Sirupsen/logrus"
@@ -16,11 +17,12 @@ import (
 )
 
 type Updater struct {
-	client rego.Client
+	client       rego.Client
+	reportWriter io.Writer
 }
 
-func NewUpdater(client rego.Client) *Updater {
-	return &Updater{client: client}
+func NewUpdater(client rego.Client, reportWriter io.Writer) *Updater {
+	return &Updater{client: client, reportWriter: reportWriter}
 }
 
 var refRegexp = regexp.MustCompile(reference.NameRegexp.String() + "(?::" + reference.TagRegexp.String() + ")?@" + reference.DigestRegexp.String() + "\\b")
@@ -42,7 +44,7 @@ func (u *Updater) UpdateRefsInFile(path string) error {
 		return err
 	}
 
-	err = u.UpdateRefsInStream(input, buffer)
+	err = u.UpdateRefsInStream(path, input, buffer)
 	if err != nil {
 		return err
 	}
@@ -51,21 +53,28 @@ func (u *Updater) UpdateRefsInFile(path string) error {
 	return ioutil.WriteFile(path, buffer.Bytes(), 0666)
 }
 
-func (u *Updater) UpdateRefsInStream(input io.Reader, output io.Writer) (err error) {
+func (u *Updater) UpdateRefsInStream(streamName string, input io.Reader, output io.Writer) (err error) {
 	scanner := bufio.NewScanner(input)
+	line := 0
 	for scanner.Scan() {
+		line++
+		context := streamName + ":" + strconv.Itoa(line)
 		updated := refRegexp.ReplaceAllStringFunc(scanner.Text(), func(s string) string {
-			return u.getUpdatedRef(s)
+			return u.updateRef(s, context)
 		})
 		fmt.Fprintln(output, updated)
 	}
 	return scanner.Err()
 }
 
-func (u *Updater) getUpdatedRef(s string) string {
+func (u *Updater) updateRef(s string, context string) string {
 	parts := strings.Split(s, "@")
 	nameAndTag := parts[0]
 	oldDigest := parts[1]
+	logrus.WithFields(logrus.Fields{
+		"context":   context,
+		"reference": nameAndTag,
+	}).Debug("resolving")
 	ref, err := reference.ParseNormalizedNamed(nameAndTag)
 	if err != nil {
 		panic(err)
@@ -78,11 +87,9 @@ func (u *Updater) getUpdatedRef(s string) string {
 		return s
 	}
 	newDigest := newRef.Digest().String()
-	if newDigest != oldDigest {
-		logrus.WithFields(logrus.Fields{
-			"was": oldDigest,
-			"now": newDigest,
-		}).Debug("updated " + nameAndTag)
+	if newDigest == oldDigest {
+		return s
 	}
+	fmt.Fprintf(u.reportWriter, "%s: %s\n  was %s\n  now %s\n", context, nameAndTag, oldDigest, newDigest)
 	return reference.FamiliarString(newRef)
 }

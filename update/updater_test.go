@@ -26,18 +26,24 @@ func (c *stubClient) Resolve(name reference.Named) (reference.Canonical, error) 
 }
 
 func TestUpdateRefsInStream(t *testing.T) {
-	client := &stubClient{digest: "sha256:08868d719684cf9cafacbaa1786ad01111332b4c1e65abd67833db603d8dab7f"}
-	inputReader := strings.NewReader("ruby:2.3@sha256:a5ebd3bc0bf3881258975f8afa1c6d24429dfd4d7dd53a299559a3e927b77fd7")
+
+	oldDigest := "sha256:a5ebd3bc0bf3881258975f8afa1c6d24429dfd4d7dd53a299559a3e927b77fd7"
+	newDigest := "sha256:08868d719684cf9cafacbaa1786ad01111332b4c1e65abd67833db603d8dab7f"
+	input := "line1\nruby:2.3@" + oldDigest + "\nline 3\n"
+	expectedOutput := strings.Replace(input, oldDigest, newDigest, 1)
+	expectedReport := "-:2: ruby:2.3\n  was " + oldDigest + "\n  now " + newDigest + "\n"
+
+	client := &stubClient{digest: digest.Digest(newDigest)}
+	inputReader := strings.NewReader(input)
 	outputWriter := new(bytes.Buffer)
+	reportWriter := new(bytes.Buffer)
+	u := NewUpdater(client, reportWriter)
 
-	u := NewUpdater(client)
-	err := u.UpdateRefsInStream(inputReader, outputWriter)
-
+	err := u.UpdateRefsInStream("-", inputReader, outputWriter)
 	if err != nil {
 		t.Error("Did not expect error, ", err)
 	}
 
-	expectedOutput := "ruby:2.3@sha256:08868d719684cf9cafacbaa1786ad01111332b4c1e65abd67833db603d8dab7f\n"
 	output := outputWriter.String()
 	if output != expectedOutput {
 		t.Error(
@@ -45,4 +51,13 @@ func TestUpdateRefsInStream(t *testing.T) {
 			"got", output,
 		)
 	}
+
+	report := reportWriter.String()
+	if report != expectedReport {
+		t.Error(
+			"expected", expectedReport,
+			"got", report,
+		)
+	}
+
 }
