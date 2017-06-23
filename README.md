@@ -1,12 +1,14 @@
 # dfresh [![Build Status](https://travis-ci.org/realestate-com-au/dfresh.svg?branch=master)](https://travis-ci.org/realestate-com-au/dfresh)
 
-`dfresh` is a Docker registry client.
+`dfresh` helps maintain the freshness of Docker image references.
 
-## Usage
+## Installing
 
-    alias dfresh="docker run -ti --rm realestate/dfresh"
+You can download `dfresh` binaries from our [Releases](https://github.com/realestate-com-au/dfresh/releases) page.
 
-    dfresh help
+Alternatively, use the Docker image, via this handy alias:
+
+    alias dfresh="docker run -ti --rm -v ~/.docker:/root/.docker -v `pwd`:/cwd realestate/dfresh"
 
 ## Get Docker repository tags
 
