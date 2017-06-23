@@ -98,7 +98,7 @@ func (c *Checker) updateRef(s string, context string) string {
 	if newDigest == oldDigest {
 		return s
 	}
-	fmt.Fprintf(c.reportWriter, "%s: %s\n  was %s\n  now %s\n", context, nameAndTag, oldDigest, newDigest)
+	fmt.Fprintf(c.reportWriter, "%s: %s\n  old %s\n  new %s\n", context, nameAndTag, oldDigest, newDigest)
 	c.updateCount++
 	return reference.FamiliarString(newRef)
 }

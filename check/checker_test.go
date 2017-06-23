@@ -31,7 +31,7 @@ func TestCheckStream(t *testing.T) {
 	newDigest := "sha256:08868d719684cf9cafacbaa1786ad01111332b4c1e65abd67833db603d8dab7f"
 	input := "line1\nruby:2.3@" + oldDigest + "\nline 3\n"
 	expectedOutput := strings.Replace(input, oldDigest, newDigest, 1)
-	expectedReport := "-:2: ruby:2.3\n  was " + oldDigest + "\n  now " + newDigest + "\n"
+	expectedReport := "-:2: ruby:2.3\n  old " + oldDigest + "\n  new " + newDigest + "\n"
 	expectedUpdates := 1
 
 	client := &stubClient{digest: digest.Digest(newDigest)}
