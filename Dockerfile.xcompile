@@ -4,12 +4,13 @@ RUN go get github.com/mitchellh/gox
 
 ENV CGO_ENABLED=0
 
-COPY vendor      /go/src/github.com/realestate-com-au/dfresh/vendor
-COPY vendor.conf /go/src/github.com/realestate-com-au/dfresh/
+COPY vendor       /go/src/github.com/realestate-com-au/dfresh/vendor
+COPY vendor.conf  /go/src/github.com/realestate-com-au/dfresh/
 
-COPY registry /go/src/github.com/realestate-com-au/dfresh/registry
-COPY main.go  /go/src/github.com/realestate-com-au/dfresh/
-COPY cmd      /go/src/github.com/realestate-com-au/dfresh/cmd
+COPY check        /go/src/github.com/realestate-com-au/dfresh/check
+COPY cmd          /go/src/github.com/realestate-com-au/dfresh/cmd
+COPY main.go      /go/src/github.com/realestate-com-au/dfresh/main.go
+COPY registry     /go/src/github.com/realestate-com-au/dfresh/registry
 
 WORKDIR /go/src/github.com/realestate-com-au/dfresh
 
