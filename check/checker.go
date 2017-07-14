@@ -26,7 +26,7 @@ func NewChecker(client rego.Client, reportWriter io.Writer) *Checker {
 	return &Checker{client: client, reportWriter: reportWriter}
 }
 
-var refRegexp = regexp.MustCompile(reference.NameRegexp.String() + "(?::" + reference.TagRegexp.String() + ")?@" + reference.DigestRegexp.String() + "\\b")
+var refRegexp = regexp.MustCompile(reference.NameRegexp.String() + "(?::" + reference.TagRegexp.String() + ")?@(?:sha256:\\?|" + reference.DigestRegexp.String() + "\\b)")
 
 func (c *Checker) CheckFiles(paths []string, saveUpdates bool) error {
 	for _, path := range paths {
