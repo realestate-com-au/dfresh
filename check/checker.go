@@ -90,8 +90,8 @@ func (c *Checker) updateRef(s string, context string) string {
 	newRef, err := c.client.Resolve(ref)
 	if err != nil {
 		logrus.WithFields(logrus.Fields{
-			"reference": nameAndTag,
-		}).Error("cannot resolve")
+			"err": err,
+		}).Error("cannot resolve " + nameAndTag)
 		return s
 	}
 	newDigest := newRef.Digest().String()
