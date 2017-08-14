@@ -65,5 +65,7 @@ func TestCheckStream(t *testing.T) {
 }
 
 func TestCheckWithoutSha(t *testing.T) {
+	CheckStreamTest("?", "sha256:08868d719684cf9cafacbaa1786ad01111332b4c1e65abd67833db603d8dab7f", t)
+	CheckStreamTest("???", "sha256:08868d719684cf9cafacbaa1786ad01111332b4c1e65abd67833db603d8dab7f", t)
 	CheckStreamTest("sha256:?", "sha256:08868d719684cf9cafacbaa1786ad01111332b4c1e65abd67833db603d8dab7f", t)
 }

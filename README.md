@@ -94,3 +94,17 @@ $ echo "FROM ruby:2.3@sha256:a5ebd3bc0bf3881258975f8afa1c6d24429dfd4d7dd53a29955
   dfresh update
 FROM ruby:2.3@sha256:08868d719684cf9cafacbaa1786ad01111332b4c1e65abd67833db603d8dab7f
 ```
+
+### Getting started
+
+To "bootstrap" use of `dfresh update`, you can specify a dummy digest, consisting of one or more question-marks, e.g.
+
+```
+$ head -1 Dockerfile
+FROM ruby:2.3@?
+
+$ dfresh update Dockerfile
+Dockerfile:1: ruby:2.3
+  old ?
+  new sha256:08868d719684cf9cafacbaa1786ad01111332b4c1e65abd67833db603d8dab7f
+```
