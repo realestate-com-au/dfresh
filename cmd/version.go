@@ -12,7 +12,7 @@ func newVersionCmd() *cobra.Command {
 		Short: "Print the version number of dfresh",
 		Long:  `All software has versions. This is dfresh's`,
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("1.1.1")
+			fmt.Println("1.1.2")
 		},
 	}
 }
