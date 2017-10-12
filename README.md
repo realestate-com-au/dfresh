@@ -108,3 +108,14 @@ Dockerfile:1: ruby:2.3
   old ?
   new sha256:08868d719684cf9cafacbaa1786ad01111332b4c1e65abd67833db603d8dab7f
 ```
+
+### Releasing
+
+Creating the binaries and pushing to both github.com and hub.docker.com is all
+wrapped up niceling into a script.
+
+```
+$ auto/release-docker-image
+```
+
+After that has completed, you can head to the [releases page](https://github.com/realestate-com-au/dfresh/releases) and create a new release. Upload the binaries from that will have been created in the `target/` folder after running the release script above.
