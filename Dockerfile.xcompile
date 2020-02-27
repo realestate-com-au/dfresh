@@ -14,4 +14,4 @@ COPY registry     /go/src/github.com/realestate-com-au/dfresh/registry
 
 WORKDIR /go/src/github.com/realestate-com-au/dfresh
 
-RUN gox -osarch "linux/amd64 darwin/amd64"
+RUN gox -osarch "linux/amd64 linux/arm64 darwin/amd64"
